@@ -25,7 +25,9 @@ private:
      */
     bool _is_written;
     
-    //filename
+    /**
+     * Stores the filename
+     */
     const string _filename;
     
     /**
@@ -44,6 +46,12 @@ private:
     void insert_buffer(const list<string>& temp);
     
     /**
+     * Utility function that replaces all occurrences
+     * of the @param from string in input to the @param to string.
+     */
+    static void replace_all(string& input, const string& from, const string& to);
+    
+    /**
      * Exits the editor. Prompts the user to save file if it
      * has not yet been written.
      */
@@ -55,15 +63,9 @@ private:
     void append(const size_t line_number);
     
     /**
-     * Write command to start taking input from the user and
-     * adding it to the buffer.
-     */
-    void write();
-    
-    /**
      * Saves the buffer to file, line by line.
      */
-    void save();
+    void write();
     
     /**
      * Inserts a the input text before the given line number.

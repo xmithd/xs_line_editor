@@ -4,7 +4,7 @@ Command::Command(const size_t current_line) : _current_line(current_line), _line
 
 bool Command::parse(const string& input) {
     // TODO
-    return false;
+    return true;
 }
 
 CommandType Command::getType() const {
