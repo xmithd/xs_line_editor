@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <cstdlib>
 
 void LineEditor::read_lines(istream & input_stream,
                             list<string>& buffer,
