@@ -1,6 +1,8 @@
 #include "LineEditor.h"
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <iterator>
 
 void LineEditor::read_lines(istream & input_stream,
                             list<string>& buffer,
@@ -12,36 +14,19 @@ void LineEditor::read_lines(istream & input_stream,
         getline(input_stream, line);
     }
 }
-// TODO test this...
-void LineEditor::replace_all(string &input, const string &from, const string &to) {
-    if (input.empty() || from.empty()) {
-        return;
-    }
-    string str;
-    str.reserve(input.length());
-    size_t start_pos(0);
-    size_t found_pos;
-    while ((found_pos = input.find(from, start_pos)) != string::npos) {
-        str += input.substr(start_pos, found_pos - start_pos);
-        str += to;
-        found_pos += from.length();
-        start_pos = found_pos;
-    }
-    input.swap(str);
-}
 
 LineEditor::LineEditor(const string& filename) :
 _filename(filename), _current(0), _is_written(true)  {
     ifstream input_file(_filename, ios::in);
     
     if (!input_file) {
-        cout << "Unable to open " << _filename << endl;
+        cout << "Unable to open file " << _filename << endl;
         cout << "\"" << _filename << "\" " << "[New File]" << endl;
-        _is_written = false;
+        //_is_written = false; // prompt before exiting in case of writing a new file.
     } else {
         read_lines(input_file, _buffer, true);
         _current = _buffer.size() - 1;
-        cout << "\"" << _filename << "\"" << (_current + 1) << " line" << (_current ? "s" : "") << endl;
+        cout << "\"" << _filename << "\" " << (_current + 1) << " line" << (_current ? "s" : "") << endl;
     }
     input_file.close();
 }
@@ -53,9 +38,13 @@ void LineEditor::quit() {
     } else {
         bool understood(false);
         while (!understood) {
-            cout << "Save changes to " << _filename << " (y/n)? ";
             string response;
+            cout << "Save changes to " << _filename << " (y/n)? ";
             cin >> response;
+            if (!cin) {
+                cerr << "Something went wrong!";
+                exit(EXIT_FAILURE);
+            }
             if (response == "y" || response == "Y") {
                 write();
                 understood = true;
@@ -83,7 +72,7 @@ void LineEditor::insert_buffer(const list<string> &temp) {
         auto origIt = next(begin(_buffer), _current);
         _buffer.insert(origIt, begin(temp), end(temp));
         _is_written = false;
-        _current += temp.size();
+        move_down(temp.size()-1);
     }
 }
 
@@ -102,7 +91,6 @@ void LineEditor::write() {
     cout << "\"" << _filename << "\" " << size << " line" << (size > 1 ? "s " : " ") << "written" << endl;
 }
 
-// TODO check when buffer is empty
 void LineEditor::insert(const size_t line_number) {
     list<string> temp;
     _current = line_number-1;
@@ -110,10 +98,18 @@ void LineEditor::insert(const size_t line_number) {
     insert_buffer(temp);
 }
 
+void LineEditor::print_empty_buffer_error() {
+    cerr << "error: file empty - enter 'q' to quit, 'a' to append, or 'i' to insert." << endl;
+}
+
 void LineEditor::remove(const size_t from, const size_t to) {
+    if (_buffer.size() == 0) {
+        print_empty_buffer_error();
+        return;
+    }
     // place the 'cursor' after the deleted lines if there are any, otherwise before.
-    if (to >= _buffer.size()) {
-        _current = from;
+    if (to >= _buffer.size()) { // after the last line
+        _current = from > 1 ? from-2 : 0; // place cursor in the line before (0 indexed)
     } else {
         _current = from-1;
     }
@@ -121,32 +117,66 @@ void LineEditor::remove(const size_t from, const size_t to) {
     _is_written = false;
 }
 
-void LineEditor::current() const {
+void LineEditor::print_current_line_number() const {
     cout << _current + 1 << endl;
 }
 
 void LineEditor::move_up(const size_t number_of_lines) {
-    _current -= number_of_lines;
+    long long current = _current;
+     current -= number_of_lines;
+    if (current < 0) {
+        _current = 0;
+    } else {
+        _current = current;
+    }
 }
 
 void LineEditor::move_down(const size_t number_of_lines) {
     _current += number_of_lines;
-}
-
-void LineEditor::print(const size_t from, const size_t to) const {
-    for (auto it = next(begin(_buffer), from-1); it != next(begin(_buffer), to); ++it) {
-        cout << *it << endl;
+    if (_current >= _buffer.size()) {
+        _current = _buffer.size()-1;
     }
 }
 
+void LineEditor::print(const size_t from, const size_t to, bool line_number) {
+    if (_buffer.size() == 0) {
+        print_empty_buffer_error();
+        return;
+    }
+    size_t current = from;
+    for (auto it = next(begin(_buffer), from-1); it != next(begin(_buffer), to); ++it) {
+        ostringstream oss;
+        oss << current << "\t";
+        cout << (line_number? oss.str() : "") << *it << endl;
+        ++current;
+    }
+    _current = to - 1;
+}
+
 void LineEditor::change(const size_t from, const size_t to) {
+    if (_buffer.size() == 0) {
+        print_empty_buffer_error();
+        return;
+    }
     string from_what, to_what;
     cout << "Change what? ";
-    cin >> from_what;
+    getline(cin, from_what);
+    if (!cin.good()) {
+        cerr << "Something went wrong!";
+        exit(EXIT_FAILURE);
+    }
     cout << "    to what? ";
-    cin >> to_what;
+    getline(cin, to_what);
+    if (!cin.good()) {
+        cerr << "Something went wrong!";
+        exit(EXIT_FAILURE);
+    }
+    size_t current(from-1);
     for (auto it = next(begin(_buffer), from-1); it != next(begin(_buffer), to); ++it) {
-        replace_all(*it, from_what, to_what);
+        if (Command::replace_all(*it, from_what, to_what)) {
+            _current = current;
+        }
+        ++current;
     }
 
 }
@@ -155,10 +185,15 @@ void LineEditor::run() {
     cout << "Entering command mode." << endl;
     while(true) {
         string input;
-        Command cmd(_current+1);
-        cout << ".";
-        cin >> input;
-        
+        const size_t last_line = _buffer.size() == 0 ? 1 : _buffer.size();
+        Command cmd(_current+1, last_line);
+        cout << ":";
+        //cin >> input;
+        getline(cin, input);
+        if (!cin.good()) {
+            cerr << "Something went wrong!." << endl;
+            exit(EXIT_FAILURE);
+        }
         if (!cmd.parse(input)) {
             cerr << "error: invalid command" << endl;
         } else {
@@ -168,8 +203,57 @@ void LineEditor::run() {
 }
 
 void LineEditor::executeCommand(const Command & command) {
-    //TODO
-    quit();
+    if (command.getRangeStart() > command.getRangeEnd()
+        || (_buffer.size() > 0 && (command.getRangeEnd() > _buffer.size()
+                                || command.getNumberOfLines() > _buffer.size()))
+        || command.getRangeStart() < 1
+        || (_buffer.size() == 0 && (command.getRangeStart() != 1 || command.getRangeEnd() != 1 || command.getNumberOfLines() != 1))
+        || command.getNumberOfLines() < 1
+        )
+    {
+        cerr << "Invalid range given!" << endl;
+        return;
+    }
+    
+    switch (command.getType()) {
+        case PRINT:
+            print(command.getRangeStart(), command.getRangeEnd());
+            break;
+        case QUIT:
+            quit();
+            break;
+        case WRITE:
+            write();
+            break;
+        case INSERT:
+            insert(command.getLineNumber());
+            break;
+        case APPEND:
+            append(command.getLineNumber());
+            break;
+        case REMOVE:
+            remove(command.getRangeStart(), command.getRangeEnd());
+            break;
+        case PRINT_CURRENT_LINE:
+            print_current_line_number();
+            break;
+        case PRINT_WITH_LINE_NUM:
+            print(command.getRangeStart(), command.getRangeEnd(), true);
+            break;
+        case MOVE_UP:
+            move_up(command.getNumberOfLines());
+            break;
+        case MOVE_DOWN:
+            move_down(command.getNumberOfLines());
+            break;
+        case CHANGE:
+            change(command.getRangeStart(), command.getRangeEnd());
+            break;
+        case INVALID:
+        default:
+            cerr << "An invalid command was issued." << endl;
+            break;
+    }
 }
 
 

@@ -46,12 +46,6 @@ private:
     void insert_buffer(const list<string>& temp);
     
     /**
-     * Utility function that replaces all occurrences
-     * of the @param from string in input to the @param to string.
-     */
-    static void replace_all(string& input, const string& from, const string& to);
-    
-    /**
      * Exits the editor. Prompts the user to save file if it
      * has not yet been written.
      */
@@ -80,7 +74,7 @@ private:
     /**
      * Displays current line number.
      */
-    void current() const;
+    void print_current_line_number() const;
     
     /**
      * Moves up by the given number of lines
@@ -94,15 +88,19 @@ private:
     void move_down(const size_t number_of_lines);
     
     /**
-     * Prints the lines
+     * Prints the lines. Set line_number to true for printing the line number
+     * followed by a tab character.
+     * The current line is moved to the last line printed.
      */
-    void print(const size_t from, const size_t to) const;
+    void print(const size_t from, const size_t to, bool line_number=false);
     
     /**
      * Replaces the occurences of a given input by
      * another given input between the given [range]
      */
     void change(const size_t from, const size_t to);
+    
+    void print_empty_buffer_error();
 
 
 public:
