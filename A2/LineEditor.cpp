@@ -125,6 +125,7 @@ void LineEditor::move_up(const size_t number_of_lines) {
     long long current = _current;
      current -= number_of_lines;
     if (current < 0) {
+        cout << "BOF reached" << endl;
         _current = 0;
     } else {
         _current = current;
@@ -134,6 +135,7 @@ void LineEditor::move_up(const size_t number_of_lines) {
 void LineEditor::move_down(const size_t number_of_lines) {
     _current += number_of_lines;
     if (_current >= _buffer.size()) {
+        cout << "EOF reached" << endl;
         _current = _buffer.size()-1;
     }
 }
@@ -204,14 +206,13 @@ void LineEditor::run() {
 
 void LineEditor::executeCommand(const Command & command) {
     if (command.getRangeStart() > command.getRangeEnd()
-        || (_buffer.size() > 0 && (command.getRangeEnd() > _buffer.size()
-                                || command.getNumberOfLines() > _buffer.size()))
+        || (_buffer.size() > 0 && (command.getRangeEnd() > _buffer.size()))
         || command.getRangeStart() < 1
-        || (_buffer.size() == 0 && (command.getRangeStart() != 1 || command.getRangeEnd() != 1 || command.getNumberOfLines() != 1))
+        || (_buffer.size() == 0 && (command.getRangeStart() != 1 || command.getRangeEnd() != 1))
         || command.getNumberOfLines() < 1
         )
     {
-        cerr << "Invalid range given!" << endl;
+        cerr << "error: invalid range " << command.getRangeStart() << " through " << command.getRangeEnd() << endl;
         return;
     }
     
@@ -226,10 +227,12 @@ void LineEditor::executeCommand(const Command & command) {
             write();
             break;
         case INSERT:
-            insert(command.getLineNumber());
+            //insert(command.getLineNumber());
+            insert(command.getRangeStart());
             break;
         case APPEND:
-            append(command.getLineNumber());
+            //append(command.getLineNumber());
+            append(command.getRangeStart());
             break;
         case REMOVE:
             remove(command.getRangeStart(), command.getRangeEnd());

@@ -61,7 +61,7 @@ bool Command::parse(const string& input) {
     // use regex for the more complicated commands:
     regex pattern("^(?:"
                   //group 1 - capture 2 and 3.
-                  "(([0-9]+)([a|i|u|d]))|"
+                  "(([0-9]+),?[0-9]*([u|d]))|"
                   // group 4 - capture 5, 6, 7
                   "(([0-9]+|\\.|\\$),([0-9]+|\\.|\\$)([r|p|c|n]))|"
                   // group 8 - capture 9, 10
@@ -75,7 +75,9 @@ bool Command::parse(const string& input) {
                   // group 20 - capture 21
                   "(([0-9]+))|"
                   // group 22, capture 23
-                  "(([0-9]+),)"
+                  "(([0-9]+),)|"
+                  // group 24, capture 25, 26
+                  "(([0-9]+),?[0-9]*([a|i|]))"
                   ")$");
     smatch result;
     regex_match(sanitized, result, pattern);
@@ -116,13 +118,20 @@ bool Command::parse(const string& input) {
             _range_start = get_numerical_value(result.str(18));
             _range_end = get_numerical_value(result.str(19));
         } else if (result.str(20).size() > 0) {
+            // group 20
             _type = PRINT;
             _range_start = get_numerical_value(result.str(21));
             _range_end = _range_start;
         } else if (result.str(22).size() > 0) {
+            // group 22
             _type = PRINT;
             _range_start = get_numerical_value(result.str(23));
             _range_end = _current_line;
+        } else if (result.str(24).size() > 0) {
+            // group 24
+            _type = get_type_from_character(result.str(26));
+            _range_start = get_numerical_value(result.str(25));
+            _range_end = _range_start;
         } else {
             return false;
         }
@@ -203,10 +212,14 @@ bool Command::parse_single_character(char input) {
         case 'i':
             _type = INSERT;
             _line_number = _current_line;
+            _range_start = _current_line;
+            _range_end = _range_start;
             return true;
         case 'a':
             _type = APPEND;
             _line_number = _current_line;
+            _range_start = _current_line;
+            _range_end = _range_start;
             return true;
         case 'p':
             _type = PRINT;
@@ -215,6 +228,24 @@ bool Command::parse_single_character(char input) {
             return true;
         case 'n':
             _type = PRINT_WITH_LINE_NUM;
+            _range_start = _current_line;
+            _range_end = _current_line;
+            return true;
+        case 'c':
+            _type = CHANGE;
+            _range_start = _current_line;
+            _range_end = _current_line;
+            return true;
+        case 'u':
+            _type = MOVE_UP;
+            _line_number = 1;
+            return true;
+        case 'd':
+            _type = MOVE_DOWN;
+            _line_number = 1;
+            return true;
+        case 'r':
+            _type = REMOVE;
             _range_start = _current_line;
             _range_end = _current_line;
             return true;
