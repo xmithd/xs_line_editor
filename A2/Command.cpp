@@ -9,42 +9,9 @@ Command::Command(const size_t current_line, const size_t last_line) : _current_l
 
 bool Command::parse(const string& input) {
     // remove all spaces and tabs.
-    string sanitized = input;
+    string sanitized(input);
     replace_all(sanitized, " ", "");
     replace_all(sanitized, "\t", "");
-    
-    //cout << "input: " << input << ", sanitized string is: " << sanitized << endl;
-    
-    /*regex pattern("^\\s*?(?:"
-              "([0-9]*\\s*?[a|i])|"
-              "([0-9]+\\s*?[u|d])|"
-              "((?:[0-9]+|\\.|\\$)\\s*?,\\s*(?:[0-9]+|\\.|\\$)\\s*[r|p|c|n])|"
-              "((?:[0-9]+|\\.|\\$)\\s*?[r|p|c|n])|"
-              "(,(?:[0-9]+|\\.|\\$)\\s*?[r|p|c|n])|"
-              "((?:[0-9]+|\\.|\\$)\\s*?,\\s*?[r|p|c|n])|"
-              "((?:[0-9]+|\\.|\\$)\\s*?,\\s*?(?:[0-9]+|\\.|\\$))|"
-              "(\\.)|"
-              "(w)|"
-              "(\\$)|"
-              "(,)|"
-              "(=)|"
-              "()"
-              ")\\s*?$");
-    
-    smatch result;
-    regex_search(input, result, pattern);
-    
-    cout << "match size: " << result.size() << endl;
-    for (size_t i=0; i < result.size(); ++i) {
-        cout << "matched at position: " << result.position() << endl;
-        cout << "match is " << result[i] << endl;
-    }
-    sregex_iterator rit (input.begin(), input.end(), pattern);
-    sregex_iterator rend;
-    while (rit != rend) {
-        cout << "Matched... size: " << rit->size() << endl;
-        cout << rit->str() << endl;
-    }*/
     
     if (sanitized.size() == 0) { // empty string.
         _type = MOVE_DOWN;
@@ -52,9 +19,9 @@ bool Command::parse(const string& input) {
         return true;
     }
 
-    // workaround to parse a digit.
+    // Parsing is simple if it's a single character.
     // Since parse_single_character doesn't recognize digits,
-    // we let the regular expression handle it.
+    // we let the regular expression handle it after.
     if (sanitized.size() == 1 && parse_single_character(sanitized[0]))
         return true;
     
@@ -75,16 +42,13 @@ bool Command::parse(const string& input) {
                   // group 20 - capture 21
                   "(([0-9]+))|"
                   // group 22, capture 23
-                  "(([0-9]+),)|"
+                  "(([0-9]+|\\.|\\$),)|"
                   // group 24, capture 25, 26
-                  "(([0-9]+),?[0-9]*([a|i|]))"
+                  "(([0-9]+|\\.|\\$),?[0-9]*([a|i|]))" // command like 1,1a or 5a or $a
                   ")$");
     smatch result;
     regex_match(sanitized, result, pattern);
-    /*cout << "Matches:\n";
-    for (size_t i=0; i < result.size(); i++) {
-        cout << "#" << i << " " + result.str(i) + "\n";
-    }*/
+
     // if a valid command was issued, it will match one of the groups
     // described in the regular expression.
     if (result.size() > 0) {

@@ -100,7 +100,11 @@ public:
     
     /**
      * Utility function that replaces all occurrences
-     * of the @param from string in input to the @param to string.
+     * of a string to another one.
+     * @param input The string to search in.
+     * @param from The string to replace.
+     * @param to The string to replace to.
+     * @return true if there is a match, false otherwise.
      */
     static bool replace_all(string& input, const string& from, const string& to);
     
