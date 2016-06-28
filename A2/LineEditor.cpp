@@ -17,7 +17,7 @@ void LineEditor::read_lines(istream & input_stream,
 }
 
 LineEditor::LineEditor(const string& filename) :
-_filename(filename), _current(0), _is_written(true)  {
+_current(0), _is_written(true), _filename(filename) {
     ifstream input_file(_filename, ios::in);
     
     if (!input_file) {
@@ -59,7 +59,6 @@ void LineEditor::quit() {
     }
 }
 
-// TODO check when buffer is empty
 void LineEditor::append(const size_t line_number) {
     list<string> temp;
     _current = line_number;
@@ -73,7 +72,7 @@ void LineEditor::insert_buffer(const list<string> &temp) {
         auto origIt = next(begin(_buffer), _current);
         _buffer.insert(origIt, begin(temp), end(temp));
         _is_written = false;
-        move_down(temp.size()-1);
+        move_down(temp.size()-1, false);
     }
 }
 
@@ -122,21 +121,23 @@ void LineEditor::print_current_line_number() const {
     cout << _current + 1 << endl;
 }
 
-void LineEditor::move_up(const size_t number_of_lines) {
+void LineEditor::move_up(const size_t number_of_lines, bool print_bof) {
     long long current = _current;
      current -= number_of_lines;
     if (current < 0) {
-        cout << "BOF reached" << endl;
+        if (print_bof)
+            cout << "BOF reached" << endl;
         _current = 0;
     } else {
         _current = current;
     }
 }
 
-void LineEditor::move_down(const size_t number_of_lines) {
+void LineEditor::move_down(const size_t number_of_lines, bool print_eof) {
     _current += number_of_lines;
     if (_current >= _buffer.size()) {
-        cout << "EOF reached" << endl;
+        if (print_eof)
+            cout << "EOF reached" << endl;
         _current = _buffer.size()-1;
     }
 }

@@ -77,15 +77,19 @@ private:
     void print_current_line_number() const;
     
     /**
-     * Moves up by the given number of lines
+     * Moves up by the given number of lines.
+     * If print_bof is set to true, it will print a message
+     * in the standard output when BOF is reached.
      */
-    void move_up(const size_t number_of_lines);
+    void move_up(const size_t number_of_lines, bool print_bof=true);
     
     /**
      * Moves down by the given number of lines.
      * User is responsible for giving a valid number.
+     * If print_eof is set to true, it will print a message
+     * in the standard output when EOF is reached.
      */
-    void move_down(const size_t number_of_lines);
+    void move_down(const size_t number_of_lines, bool print_eof=true);
     
     /**
      * Prints the lines. Set line_number to true for printing the line number
