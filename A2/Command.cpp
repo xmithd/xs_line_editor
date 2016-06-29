@@ -175,13 +175,13 @@ bool Command::parse_single_character(char input) {
             return true;
         case 'i':
             _type = INSERT;
-            _line_number = _current_line;
+            //_line_number = _current_line;
             _range_start = _current_line;
             _range_end = _range_start;
             return true;
         case 'a':
             _type = APPEND;
-            _line_number = _current_line;
+            //_line_number = _current_line;
             _range_start = _current_line;
             _range_end = _range_start;
             return true;

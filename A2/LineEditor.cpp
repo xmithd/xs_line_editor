@@ -138,7 +138,7 @@ void LineEditor::move_down(const size_t number_of_lines, bool print_eof) {
     if (_current >= _buffer.size()) {
         if (print_eof)
             cout << "EOF reached" << endl;
-        _current = _buffer.size()-1;
+        _current = _buffer.size() ? (_buffer.size()-1) : 0;
     }
 }
 
@@ -207,10 +207,12 @@ void LineEditor::run() {
 }
 
 void LineEditor::executeCommand(const Command & command) {
+    // command's current line is indexed starting at 0 while _current here is 0 based index.
+    //cout << "Current line: " << _current << " and command's: " << command.getCurrentLine() << endl;
     if (command.getRangeStart() > command.getRangeEnd()
         || (_buffer.size() > 0 && (command.getRangeEnd() > _buffer.size()))
         || command.getRangeStart() < 1
-        || (_buffer.size() == 0 && (command.getRangeStart() != 1 || command.getRangeEnd() != 1))
+        || (_buffer.size() == 0 && (command.getRangeStart() > 1 || command.getRangeEnd() > 1))
         || command.getNumberOfLines() < 1
         )
     {
