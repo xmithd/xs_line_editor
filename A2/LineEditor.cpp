@@ -26,7 +26,7 @@ _current(0), _is_written(true), _filename(filename) {
         //_is_written = false; // prompt before exiting in case of writing a new file.
     } else {
         read_lines(input_file, _buffer, true);
-        _current = _buffer.size() - 1;
+        _current = _buffer.size() ? (_buffer.size() - 1) : 0;
         cout << "\"" << _filename << "\" " << (_current + 1) << " line" << (_current ? "s" : "") << endl;
     }
     input_file.close();
@@ -64,7 +64,10 @@ void LineEditor::append(const size_t line_number) {
     _current = line_number;
     read_lines(cin, temp);
     // insert the temporary buffer into the current buffer at the position indicated by _current.
-    insert_buffer(temp);
+    if (temp.size() > 0)
+      insert_buffer(temp);
+    else //put the cursor one back (to the original position)
+      _current = line_number - 1;
 }
 
 void LineEditor::insert_buffer(const list<string> &temp) {
@@ -208,7 +211,8 @@ void LineEditor::run() {
 
 void LineEditor::executeCommand(const Command & command) {
     // command's current line is indexed starting at 0 while _current here is 0 based index.
-    //cout << "Current line: " << _current << " and command's: " << command.getCurrentLine() << endl;
+    // The following line is useful for debugging
+    // cout << "Current line: " << _current << " and command's: " << command.getCurrentLine() << endl;
     if (command.getRangeStart() > command.getRangeEnd()
         || (_buffer.size() > 0 && (command.getRangeEnd() > _buffer.size()))
         || command.getRangeStart() < 1
