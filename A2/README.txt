@@ -1,4 +1,4 @@
-COMP5421 Summer 2016
+Summer 2016
 xmithd
 Assignment 2
 
@@ -18,4 +18,4 @@ will not be accepted.
 Additionally, the command to 'move up by 1 line'
 can be issued with just 'u'. 1u will work as well of course.
 Similarly, 'move down by 1 line' can be done with
-either the enter key, '1d' or simply 'd'. 
+either the enter key, '1d' or simply 'd'.
